@@ -15,13 +15,14 @@ using RadarrAPI.Release.AppVeyor.Responses;
 using RadarrAPI.Update;
 using Microsoft.EntityFrameworkCore;
 using RadarrAPI.Database.Models;
+using OperatingSystem = RadarrAPI.Update.OperatingSystem;
 
 namespace RadarrAPI.Release.AppVeyor
 {
     public class AppVeyorReleaseSource : ReleaseSourceBase
     {
-        private const string AccountName = "galli-leo";
-        private const string ProjectSlug = "radarr-usby1";
+        private const string AccountName = "Vagab0nd";
+        private const string ProjectSlug = "radarr";
         private const int TotalArtifactsCount = 4;
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

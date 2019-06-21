@@ -7,6 +7,7 @@ using RadarrAPI.Database;
 using RadarrAPI.Update;
 using RadarrAPI.Update.Data;
 using Branch = RadarrAPI.Update.Branch;
+using OperatingSystem = RadarrAPI.Update.OperatingSystem;
 
 namespace RadarrAPI.Controllers
 {

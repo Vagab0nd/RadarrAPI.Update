@@ -13,6 +13,7 @@ using RadarrAPI.Database.Models;
 using RadarrAPI.Update;
 using RadarrAPI.Util;
 using Branch = RadarrAPI.Update.Branch;
+using OperatingSystem = RadarrAPI.Update.OperatingSystem;
 
 namespace RadarrAPI.Release.Github
 {
@@ -29,7 +30,7 @@ namespace RadarrAPI.Release.Github
 
         protected override async Task DoFetchReleasesAsync()
         {
-            var releases = await _gitHubClient.Repository.Release.GetAll("Radarr", "Radarr");
+            var releases = await _gitHubClient.Repository.Release.GetAll("Vagab0nd", "Radarr");
             var validReleases = releases.Where(r =>
                 r.TagName.StartsWith("v") &&
                 VersionUtil.IsValid(r.TagName.Substring(1)) &&

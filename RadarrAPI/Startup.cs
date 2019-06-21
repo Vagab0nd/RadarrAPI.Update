@@ -48,13 +48,20 @@ namespace RadarrAPI
             services.AddMvc();
 
             // Add database
-            services.AddDbContext<DatabaseContext>(o => o.UseMySql(Configuration["Database"]));
+            if (string.IsNullOrWhiteSpace(Configuration["Database"]))
+            {
+                var connectionString = Environment.GetEnvironmentVariable("MYSQLCONNSTR_localdb");
+                services.AddDbContext<DatabaseContext>(o => o.UseMySql(connectionString));
+            }
+            else
+            {
+                services.AddDbContext<DatabaseContext>(o => o.UseMySql(Configuration["Database"]));
+            }
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddNLog();
-            app.AddNLogWeb();
             app.UseMvc();
         }
     }

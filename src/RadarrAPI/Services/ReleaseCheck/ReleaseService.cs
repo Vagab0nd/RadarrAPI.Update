@@ -4,13 +4,11 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NLog;
 using RadarrAPI.Services.ReleaseCheck.AppVeyor;
 using RadarrAPI.Services.ReleaseCheck.Github;
 using RadarrAPI.Update;
-using Sentry;
 
 namespace RadarrAPI.Services.ReleaseCheck
 {
@@ -18,11 +16,8 @@ namespace RadarrAPI.Services.ReleaseCheck
     {
         private static readonly ConcurrentDictionary<Branch, SemaphoreSlim> ReleaseLocks;
 
-        private readonly IServiceScopeFactory _serviceScopeFactory;
-
-        private readonly IHub _sentry;
-        private readonly ILogger<ReleaseService> _logger;
-
+        private readonly IServiceProvider _serviceProvider;
+        
         private readonly ConcurrentDictionary<Branch, Type> _releaseBranches;
 
         private readonly Config _config;
@@ -34,15 +29,9 @@ namespace RadarrAPI.Services.ReleaseCheck
             ReleaseLocks.TryAdd(Branch.Nightly, new SemaphoreSlim(1, 1));
         }
 
-        public ReleaseService(
-            IServiceScopeFactory serviceScopeFactory, 
-            IHub sentry, 
-            ILogger<ReleaseService> logger,
-            IOptions<Config> configOptions)
+        public ReleaseService(IServiceProvider serviceProvider, IOptions<Config> configOptions)
         {
-            _serviceScopeFactory = serviceScopeFactory;
-            _sentry = sentry;
-            _logger = logger;
+            _serviceProvider = serviceProvider;
 
             _releaseBranches = new ConcurrentDictionary<Branch, Type>();
             _releaseBranches.TryAdd(Branch.Develop, typeof(GithubReleaseSource));
@@ -67,28 +56,22 @@ namespace RadarrAPI.Services.ReleaseCheck
 
             try
             {
+                LogManager.GetCurrentClassLogger().Warn("ReleaseService: Obtaining a lock.");
                 obtainedLock = await releaseLock.WaitAsync(TimeSpan.FromMinutes(5));
 
                 if (obtainedLock)
                 {
-                    using (var scope = _serviceScopeFactory.CreateScope())
+                    LogManager.GetCurrentClassLogger().Warn("ReleaseService: Obtained lock.");
+                    var releaseSourceInstance = (ReleaseSourceBase) _serviceProvider.GetRequiredService(releaseSourceBaseType);
+
+                    releaseSourceInstance.ReleaseBranch = branch;
+
+                    var hasNewRelease = await releaseSourceInstance.StartFetchReleasesAsync();
+                    if (hasNewRelease)
                     {
-                        var releaseSourceInstance = (ReleaseSourceBase) scope.ServiceProvider.GetRequiredService(releaseSourceBaseType);
-
-                        releaseSourceInstance.ReleaseBranch = branch;
-
-                        var hasNewRelease = await releaseSourceInstance.StartFetchReleasesAsync();
-                        if (hasNewRelease)
-                        {
-                            await CallTriggers(branch);
-                        }
+                        await CallTriggers(branch);
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "ReleaseService threw an exception.");
-                _sentry.CaptureException(e);
             }
             finally
             {

@@ -61,6 +61,12 @@ namespace RadarrAPI.Release.Github
                         Branch = ReleaseBranch
                     };
 
+                    // Start tracking this object
+                    await database.AddAsync(updateEntity);
+                }
+
+                if ((updateEntity.Fixed.Any() || updateEntity.New.Any()) == false)
+                {
                     // Parse changes
                     var releaseBody = release.Body;
 
@@ -81,9 +87,6 @@ namespace RadarrAPI.Release.Github
                             if (match.Success) updateEntity.Fixed.Add(match.Groups["text"].Value);
                         }
                     }
-
-                    // Start tracking this object
-                    await database.AddAsync(updateEntity);
                 }
 
                 // Process releases

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Web;
+using RadarrAPI.Util;
 using System;
 
 namespace RadarrAPI
@@ -14,7 +15,9 @@ namespace RadarrAPI
             var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
             try
             {
-                BuildWebHost(args).Run();
+                BuildWebHost(args)
+                    .MigrateDatabase()
+                    .Run();
             }
             catch (Exception ex)
             {

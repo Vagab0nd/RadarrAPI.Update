@@ -259,3 +259,4 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/src/RadarrAPI/Properties/PublishProfiles/RadarrAPI20190621124635 - Web Deploy.pubxml
